@@ -25,6 +25,6 @@
   },
   "homepage": "https://github.com/Billcountry/firebase-orient#readme",
   "dependencies": {
-    "firebase": "^5.9.2"
+    "firebase": "^5.9.3"
   }
 }
