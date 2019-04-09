@@ -15,13 +15,20 @@ export default class Firebase {
      * Intializes a single firebase app with given props from constants
      * If using multiple firebase apps provide the config in the constructor
      *
-     * @param {object} props                    Properties required to initialize firebase
+     * @param {object || undefined} props                    Properties required to initialize firebase
      * @param {string} props.appID              The ID of your app usually appID.firebaseapp.com
      * @param {string} props.messagingSenderId  Firebase messaging ID, provided as part of your config
      * @param {string} props.apiKey             Ofcourse firebase won't just let us connect to their servers like hippies
      * @param {bool}   props.google             If you have enabled google login, set this value to true
      */
     constructor(props) {
+        if(!props){
+            if(window.default_firebase_orient_props){
+                props = window.default_firebase_orient_props
+            }else{
+                throw new Error("Firebase configuration not set")
+            }
+        }
         const config = {
             apiKey: props.apiKey,
             authDomain: `${props.appID}.firebaseapp.com`,
@@ -569,4 +576,17 @@ const validateQuery = conditions => {
     }
 
     return true
+}
+
+/**
+ * Set's up firebase orient to always use these properties on making calls to firebase
+ *
+ * @param {object} props                    Properties required to initialize firebase
+ * @param {string} props.appID              The ID of your app usually appID.firebaseapp.com
+ * @param {string} props.messagingSenderId  Firebase messaging ID, provided as part of your config
+ * @param {string} props.apiKey             Ofcourse firebase won't just let us connect to their servers like hippies
+ * @param {bool}   props.google             If you have enabled google login, set this value to true
+ */
+export const setUp = props => {
+    window.default_firebase_orient_props = props
 }
