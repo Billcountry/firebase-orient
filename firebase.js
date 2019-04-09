@@ -61,6 +61,7 @@ export default class Firebase {
      * @param {function} callback Your function will be called with the user object everytime the user logs in or out
      */
     auth_state(callback) {
+        callback(this.auth.currentUser)
         this.auth.onAuthStateChanged(user => {
             if (user) {
                 callback(user)
