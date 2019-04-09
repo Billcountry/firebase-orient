@@ -32,6 +32,7 @@ This class allows you to do various user management functions including:
     - login
     - registration
     - manage user session
+    - upload files to firebase storage
 The class can be imported and initialized as follows:
 ```js
 import Firebase from "firebase-orient"
@@ -59,5 +60,57 @@ Registration:
 ```js
 firebase.auth_email_register("your@e.mail", "Password").then(user => {
     console.log(user)
+})
+```
+
+Login:
+```js
+firebase.auth_email_signin("your@e.mail", "Password").then(user => {
+    console.log(user)
+})
+```
+
+#### Google Auth
+Google auth doesn't separate registration and login so you just:
+```js
+firebase.auth_google_login().then(user => {
+    console.log(user)
+})
+```
+
+#### Authentication State
+Often you need to know whether your user is still logged in or not.
+The function is called immediately with the current user, then incase of a change.
+```js
+firebase.auth_state(user => {
+    if(user){
+        console.log(user)
+    }else{
+        // There's no user logged in, do something about it
+    }
+})
+```
+
+#### Storage
+You can access firebase storage, upload files, track upload progress and get the download url
+The upload functions takes the following parameters:
+* `path`(*String*) The path to save the file relative to the bucket root including the filename
+* `file`(*FileObject*) A javascript binary file object from input of drop or oter sources
+* `task_id`(*any*) An upload is a task, this will be used to track the progress
+* `actions`(*Object.<functions>*) All actions are called with the task_id as the first var
+    * `actions.pause` Will be called if the upload is paused
+    * `actions.complete` Will be called with the download link once the upload is done
+    * `actions.progress` Will be called with progress value on progress update
+    * `actions.error` Will be called with the error string if an error occurs
+The function returns an [upload task](https://firebase.google.com/docs/storage/web/upload-files#manage_uploads) you can use to control the download.
+```js
+const file = document.querySelector("#some-file-input").files[0]
+firebase.upload("users/images/random.png", file, "upload1", {
+    pause: task_id => {
+        console.log("Task paused", task_id)
+    },
+    complete: (task_id, download_url) => {
+        console.log("File upload done", download_url)
+    }
 })
 ```
