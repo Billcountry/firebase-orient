@@ -14,13 +14,11 @@ import {setUp} from "firebase-orient"
 /**
  * @param {object} props                    Properties required to initialize firebase
  * @param {string} props.appID              The ID of your app usually appID.firebaseapp.com
- * @param {string} props.messagingSenderId  Firebase messaging ID, provided as part of your config
  * @param {string} props.apiKey             Ofcourse firebase won't just let us connect to their servers like hippies
  * @param {bool}   props.google             If you have enabled google login, set this value to true
  */
 setUp({
     appID: "<app_id>",
-    messagingSenderId: "<messagingSenderId>",
     apiKey: "<messagingSenderId>",
     google: <True | False>
 })
@@ -95,13 +93,14 @@ firebase.auth_state(user => {
 You can access firebase storage, upload files, track upload progress and get the download url
 The upload functions takes the following parameters:
 * `path`(*String*) The path to save the file relative to the bucket root including the filename
-* `file`(*FileObject*) A javascript binary file object from input of drop or oter sources
+* `file`(*FileObject*) A javascript binary file object from input of drop or other sources
 * `task_id`(*any*) An upload is a task, this will be used to track the progress
 * `actions`(*Object.<functions>*) All actions are called with the task_id as the first var
     * `actions.pause` Will be called if the upload is paused
     * `actions.complete` Will be called with the download link once the upload is done
     * `actions.progress` Will be called with progress value on progress update
     * `actions.error` Will be called with the error string if an error occurs
+
 The function returns an [upload task](https://firebase.google.com/docs/storage/web/upload-files#manage_uploads) you can use to control the download.
 ```js
 const file = document.querySelector("#some-file-input").files[0]
@@ -113,4 +112,50 @@ firebase.upload("users/images/random.png", file, "upload1", {
         console.log("File upload done", download_url)
     }
 })
+```
+**Actions functions are nullable, *you however shouldn't null the on complete functions***
+
+### The FireStore class
+This is an extension of Firestore that *IMO* makes it feel more database like
+
+To create a model simply do:
+```js
+import {db} from "firebase-orient"
+
+class User extends db.Model {
+    constructor(name, email){
+        super({
+            name: db.stringField(),
+            email: db.stringField(),
+            height: db.numberField({default: 5.1}),
+            date_registered: db.datetimeField(),
+            interests: db.listField(),
+            contact: db.objectField(),
+        })
+        this.name = name
+        this.email = email
+    }
+}
+
+class Session extends db.Model {
+    constructor(){
+        super({
+            user: db.refferenceField(User),
+            start: db.datetimeField()
+        })
+    }
+}
+```
+**NB:**
+- You must define fields in a `super` call in your constructor
+- If a field is not defined then it won't be submitted on put
+
+You can then proceed to use your models as shown:
+```js
+const user = new User("Some Name", "some@names.email")
+user.put()
+
+const session = new Session()
+session.user = user
+session.start = db.currentTimestamp()
 ```
