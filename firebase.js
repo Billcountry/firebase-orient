@@ -17,7 +17,6 @@ export default class Firebase {
      *
      * @param {object || undefined} props                    Properties required to initialize firebase
      * @param {string} props.appID              The ID of your app usually appID.firebaseapp.com
-     * @param {string} props.messagingSenderId  Firebase messaging ID, provided as part of your config
      * @param {string} props.apiKey             Ofcourse firebase won't just let us connect to their servers like hippies
      * @param {bool}   props.google             If you have enabled google login, set this value to true
      */
@@ -35,7 +34,6 @@ export default class Firebase {
             databaseURL: `https://${props.appID}.firebaseio.com`,
             projectId: props.appID,
             storageBucket: `${props.appID}.appspot.com`,
-            messagingSenderId: props.messagingSenderId,
         }
 
         if (!firebase.apps.length) {
@@ -390,7 +388,7 @@ export const db = {
      * @param   {object} field_props.default The default value of this field
      * @return {FieldType} A field type accessible to the firestore model
      */
-    jsonField: field_props => {
+    objectField: field_props => {
         return new FieldType(FieldTypes.json, field_props)
     },
 
@@ -411,20 +409,23 @@ export const db = {
      * @return {FieldType} A field type accessible to the firestore model
      */
     listField: field_props => {
-        return new FieldType(FieldTypes.datetime, field_props)
+        return new FieldType(FieldTypes.list, field_props)
     },
 
     /**
      * A field refferencing another model
-     * @param  {object} model The model this field reffrences
-     * @param  {string} master The field name on the refferenced model that relates to the other field
-     * @param  {string} slave The field name on this model that relates to the master
+     * @param  {Model} model The model this field reffrences
      * @return {FieldType} A field type accessible to the firestore model
      */
-    refferenceField: (model, master, slave) => {
-        return new FieldType(FieldTypes.datetime, { model, master, slave })
+    refferenceField: (model, props) => {
+        return new FieldType(FieldTypes.refference, { model, ...props ||{} })
     },
 
+    /**
+     * [currentTimestamp description]
+     * @return {firestoreTimestamp} [description]
+     */
+    currentTimestamp: ()=> firebase.firestore.FieldValue.serverTimestamp(),
     helpers,
 }
 
@@ -542,7 +543,6 @@ const helpers = {
  */
 const validateQuery = conditions => {
     let in_array = 0
-    let range_queries = []
     const range_queries = [">", ">=", "<", "<="]
     conditions.forEach(condition => {
         if (condition.limit || condition.order) return // An order or limit command
