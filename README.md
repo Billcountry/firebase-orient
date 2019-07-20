@@ -159,3 +159,8 @@ const session = new Session()
 session.user = user
 session.start = db.currentTimestamp()
 ```
+
+
+#### Release Notes:
+- v1.0.1
+    - Fixed bugs on model referencing
