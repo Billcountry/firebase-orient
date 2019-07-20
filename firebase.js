@@ -21,10 +21,10 @@ export default class Firebase {
      * @param {bool}   props.google             If you have enabled google login, set this value to true
      */
     constructor(props) {
-        if(!props){
-            if(window.default_firebase_orient_props){
+        if (!props) {
+            if (window.default_firebase_orient_props) {
                 props = window.default_firebase_orient_props
-            }else{
+            } else {
                 throw new Error("Firebase configuration not set")
             }
         }
@@ -41,8 +41,6 @@ export default class Firebase {
         }
 
         this.db = firebase.firestore()
-        const settings = { timestampsInSnapshots: true }
-        this.db.settings(settings)
 
         this.rtdb = firebase.database()
         this.auth = firebase.auth()
@@ -217,7 +215,7 @@ class FirestoreModel {
         Object.keys(fields).forEach(key => {
             const field = fields[key]
             if (field instanceof FieldType) {
-                createField(key, field)
+                this.createField(key, field)
             } else {
                 throw new Error("Invalid field type for " + key)
             }
@@ -237,8 +235,8 @@ class FirestoreModel {
 
         Object.keys(this._fields).forEach(key => {
             const value = data[key]
-            if(remote_keys.includes(key)){
-                this[key] = data[kay]
+            if (remote_keys.includes(key)) {
+                this[key] = data[key]
             }
         })
         return this
@@ -306,9 +304,7 @@ class FirestoreModel {
         }
 
         return ref.get().then(snapShots => {
-            snapShots.forEach(doc => {
-
-            })
+            snapShots.forEach(doc => {})
         })
     }
 
@@ -328,13 +324,22 @@ class FirestoreModel {
                 put_fields[key] = current_value
             }
         })
-        return this.db
-            .collection(this.name)
-            .doc(key)
-            .set(put_fields, {merge: true})
-            .then(doc_ref => {
-                return this.merge_remote_data(doc_ref.data())
-            })
+        if (this.key) {
+            return this.db
+                .collection(this.name)
+                .doc(this.key)
+                .set(put_fields, { merge: true })
+                .then(doc_ref => {
+                    return this.merge_remote_data(doc_ref.data())
+                })
+        } else {
+            return this.db
+                .collection(this.name)
+                .add(put_fields)
+                .then(doc_ref => {
+                    return this.merge_remote_data(doc_ref.data())
+                })
+        }
     }
 }
 
@@ -356,7 +361,7 @@ export const db = {
      * @param  {*args} conditions   Query conditions, can be derived from db.helpers
      * @return {Promise.<[Models]>} A promise that resolves to a list of models
      */
-    query: function(Model, ...conditions){
+    query: function(Model, ...conditions) {
         const model = new Model()
         return model.query(conditions)
     },
@@ -418,14 +423,14 @@ export const db = {
      * @return {FieldType} A field type accessible to the firestore model
      */
     refferenceField: (model, props) => {
-        return new FieldType(FieldTypes.refference, { model, ...props ||{} })
+        return new FieldType(FieldTypes.refference, { model, ...(props || {}) })
     },
 
     /**
      * [currentTimestamp description]
      * @return {firestoreTimestamp} [description]
      */
-    currentTimestamp: ()=> firebase.firestore.FieldValue.serverTimestamp(),
+    currentTimestamp: () => firebase.firestore.FieldValue.serverTimestamp(),
     helpers,
 }
 
@@ -502,9 +507,7 @@ const helpers = {
      * @param  {number} limit The maximum number of fields you need at any given time
      * @returns {query_limit}
      */
-    limit: limit => {
-        limit
-    },
+    limit: limit => limit,
 
     /**
      * Define an order for your query, multiple allowed
@@ -512,11 +515,12 @@ const helpers = {
      * @param  {direction} direction Available from db.helpers.direction[asc || desc]
      * @returns {query_order}
      */
-    order: (field, direction) => {
+    order: (field, direction) => ({
         order: {
-            field, direction
-        }
-    },
+            field,
+            direction,
+        },
+    }),
     direction: {
         asc: "asc",
         desc: "desc",
