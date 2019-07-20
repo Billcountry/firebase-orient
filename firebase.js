@@ -343,97 +343,6 @@ class FirestoreModel {
     }
 }
 
-export const db = {
-    /**
-     * Use this to get a model instance with the data from a specific key
-     * @param  {string} key     Unique key representing the record
-     * @param  {db.Model} Model The model the key belongs to
-     * @return {Promise}        A promise that resolves a model instance
-     */
-    get: (key, Model) => {
-        const model = new Model()
-        return model.get_remote(key)
-    },
-
-    /**
-     * [description]
-     * @param  {db.Model} Model       A firestore Model to run this query on
-     * @param  {*args} conditions   Query conditions, can be derived from db.helpers
-     * @return {Promise.<[Models]>} A promise that resolves to a list of models
-     */
-    query: function(Model, ...conditions) {
-        const model = new Model()
-        return model.query(conditions)
-    },
-
-    Model: FirestoreModel,
-    /**
-     * A string field
-     * @param  {object} field_props An object with string Properties
-     * @param   {string} field_props.default The default value of this field
-     * @return {FieldType} A field type accessible to the firestore model
-     */
-    stringField: field_props => {
-        return new FieldType(FieldTypes.string, field_props)
-    },
-
-    /**
-     * A Number field
-     * @param  {object} field_props An object with number Properties
-     * @param   {number} field_props.default The default value of this field
-     * @return {FieldType} A field type accessible to the firestore model
-     */
-    numberField: field_props => {
-        return new FieldType(FieldTypes.number, field_props)
-    },
-
-    /**
-     * A json field
-     * @param  {object} field_props An object with number Properties
-     * @param   {object} field_props.default The default value of this field
-     * @return {FieldType} A field type accessible to the firestore model
-     */
-    objectField: field_props => {
-        return new FieldType(FieldTypes.json, field_props)
-    },
-
-    /**
-     * A date time field
-     * @param  {object} field_props An object with number Properties
-     * @param   {object} field_props.default The default value of this field
-     * @return {FieldType} A field type accessible to the firestore model
-     */
-    datetimeField: field_props => {
-        return new FieldType(FieldTypes.datetime, field_props)
-    },
-
-    /**
-     * A list field of strings or numbers
-     * @param  {object} field_props An object with number Properties
-     * @param   {object} field_props.default The default value of the list
-     * @return {FieldType} A field type accessible to the firestore model
-     */
-    listField: field_props => {
-        return new FieldType(FieldTypes.list, field_props)
-    },
-
-    /**
-     * A field refferencing another model
-     * @param  {Model} model The model this field reffrences
-     * @return {FieldType} A field type accessible to the firestore model
-     */
-    refferenceField: (model, props) => {
-        return new FieldType(FieldTypes.refference, { model, ...(props || {}) })
-    },
-
-    /**
-     * [currentTimestamp description]
-     * @return {firestoreTimestamp} [description]
-     */
-    currentTimestamp: () => firebase.firestore.FieldValue.serverTimestamp(),
-    helpers,
-}
-
 class FieldType {
     constructor(field_type, field_props) {
         this.type = field_type
@@ -449,6 +358,50 @@ const FieldTypes = {
     list: "list",
     datetime: "datetime",
     refference: "refference",
+}
+
+/**
+ * Validates that the query is a valid firestore query
+ * @param  {list} conditions A list of query conditions
+ * @throws {Error} Throws an invalid query error and the reason
+ * @returns {bool} True, when a query passes
+ */
+const validateQuery = conditions => {
+    let in_array = 0
+    const range_queries = [">", ">=", "<", "<="]
+    conditions.forEach(condition => {
+        if (condition.limit || condition.order) return // An order or limit command
+
+        if (condition[1] === "array-contains") {
+            in_array++
+        }
+
+        if (range_queries.includes(condition[1])) {
+            range_queries.push(condition[0])
+        }
+    })
+
+    if (in_array > 1) {
+        console.log(
+            "For more information about firestore queries see: https://firebase.google.com/docs/firestore/query-data/queries"
+        )
+        throw new Error(
+            "Invalid query: Only one inList condition is allowed in a query"
+        )
+    }
+
+    if (range_queries.length > 1) {
+        console.log(
+            "For more information about firestore queries see: https://firebase.google.com/docs/firestore/query-data/queries"
+        )
+        throw new Error(
+            `Rang queries i.e  [">", ">=", "<", "<="] can only be performed on one field, Affected fields: [${range_queries.join(
+                ", "
+            )}]`
+        )
+    }
+
+    return true
 }
 
 const helpers = {
@@ -539,48 +492,95 @@ const helpers = {
     },
 }
 
-/**
- * Validates that the query is a valid firestore query
- * @param  {list} conditions A list of query conditions
- * @throws {Error} Throws an invalid query error and the reason
- * @returns {bool} True, when a query passes
- */
-const validateQuery = conditions => {
-    let in_array = 0
-    const range_queries = [">", ">=", "<", "<="]
-    conditions.forEach(condition => {
-        if (condition.limit || condition.order) return // An order or limit command
+export const db = {
+    /**
+     * Use this to get a model instance with the data from a specific key
+     * @param  {string} key     Unique key representing the record
+     * @param  {db.Model} Model The model the key belongs to
+     * @return {Promise}        A promise that resolves a model instance
+     */
+    get: (key, Model) => {
+        const model = new Model()
+        return model.get_remote(key)
+    },
 
-        if (condition[1] === "array-contains") {
-            in_array++
-        }
+    /**
+     * [description]
+     * @param  {db.Model} Model       A firestore Model to run this query on
+     * @param  {*args} conditions   Query conditions, can be derived from db.helpers
+     * @return {Promise.<[Models]>} A promise that resolves to a list of models
+     */
+    query: function(Model, ...conditions) {
+        const model = new Model()
+        return model.query(conditions)
+    },
 
-        if (range_queries.includes(condition[1])) {
-            range_queries.push(condition[0])
-        }
-    })
+    Model: FirestoreModel,
+    /**
+     * A string field
+     * @param  {object} field_props An object with string Properties
+     * @param   {string} field_props.default The default value of this field
+     * @return {FieldType} A field type accessible to the firestore model
+     */
+    stringField: field_props => {
+        return new FieldType(FieldTypes.string, field_props)
+    },
 
-    if (in_array > 1) {
-        console.log(
-            "For more information about firestore queries see: https://firebase.google.com/docs/firestore/query-data/queries"
-        )
-        throw new Error(
-            "Invalid query: Only one inList condition is allowed in a query"
-        )
-    }
+    /**
+     * A Number field
+     * @param  {object} field_props An object with number Properties
+     * @param   {number} field_props.default The default value of this field
+     * @return {FieldType} A field type accessible to the firestore model
+     */
+    numberField: field_props => {
+        return new FieldType(FieldTypes.number, field_props)
+    },
 
-    if (range_queries.length > 1) {
-        console.log(
-            "For more information about firestore queries see: https://firebase.google.com/docs/firestore/query-data/queries"
-        )
-        throw new Error(
-            `Rang queries i.e  [">", ">=", "<", "<="] can only be performed on one field, Affected fields: [${range_queries.join(
-                ", "
-            )}]`
-        )
-    }
+    /**
+     * A json field
+     * @param  {object} field_props An object with number Properties
+     * @param   {object} field_props.default The default value of this field
+     * @return {FieldType} A field type accessible to the firestore model
+     */
+    objectField: field_props => {
+        return new FieldType(FieldTypes.json, field_props)
+    },
 
-    return true
+    /**
+     * A date time field
+     * @param  {object} field_props An object with number Properties
+     * @param   {object} field_props.default The default value of this field
+     * @return {FieldType} A field type accessible to the firestore model
+     */
+    datetimeField: field_props => {
+        return new FieldType(FieldTypes.datetime, field_props)
+    },
+
+    /**
+     * A list field of strings or numbers
+     * @param  {object} field_props An object with number Properties
+     * @param   {object} field_props.default The default value of the list
+     * @return {FieldType} A field type accessible to the firestore model
+     */
+    listField: field_props => {
+        return new FieldType(FieldTypes.list, field_props)
+    },
+
+    /**
+     * A field refferencing another model
+     * @param  {Model} model The model this field reffrences
+     * @return {FieldType} A field type accessible to the firestore model
+     */
+    refferenceField: (model, props) => {
+        return new FieldType(FieldTypes.refference, { model, ...(props || {}) })
+    },
+
+    /**
+     * [currentTimestamp description]
+     * @return {firestoreTimestamp} [description]
+     */
+    currentTimestamp: () => firebase.firestore.FieldValue.serverTimestamp(),
+    helpers,
 }
 
 /**
