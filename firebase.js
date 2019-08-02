@@ -260,7 +260,9 @@ class FirestoreModel {
                 if (doc.exists) {
                     return this.merge_remote_data(doc.data())
                 }
-                Promise.reject("This record does not exist in the database")
+                return new Promise.reject(
+                    "This record does not exist in the database"
+                )
             })
     }
 
