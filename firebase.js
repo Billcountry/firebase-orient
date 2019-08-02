@@ -258,7 +258,7 @@ class FirestoreModel {
             .get()
             .then(doc => {
                 if (doc.exists) {
-                    return this.merge_remote_data(doc.data())
+                    return this.merge_remote_data(doc.data)
                 }
                 return new Promise.reject(
                     "This record does not exist in the database"
@@ -326,20 +326,21 @@ class FirestoreModel {
                 put_fields[key] = current_value
             }
         })
+        console.log(!!this.key, this.key)
         if (this.key) {
             return this.db
                 .collection(this.__name__)
                 .doc(this.key)
                 .set(put_fields, { merge: true })
-                .then(doc_ref => {
-                    return this.merge_remote_data(doc_ref.data())
+                .then(() => {
+                    return this
                 })
         } else {
             return this.db
                 .collection(this.__name__)
                 .add(put_fields)
                 .then(doc_ref => {
-                    return this.merge_remote_data(doc_ref.data())
+                    return this.merge_remote_data(doc_ref.data)
                 })
         }
     }
@@ -504,7 +505,6 @@ export const db = {
      */
     get: (key, Model) => {
         const model = new Model()
-        console.log(model.__name__)
         return model.get(key)
     },
 
