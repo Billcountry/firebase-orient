@@ -164,3 +164,6 @@ session.start = db.currentTimestamp()
 #### Release Notes:
 - v1.0.1
     - Fixed bugs on model referencing
+- v1.0.2
+    - Fixed error on getting models
+    - Fixed errors on saving updated models
