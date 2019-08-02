@@ -206,11 +206,11 @@ export const CURRENT_TIMESTAMP = firebase.database.ServerValue.TIMESTAMP
 class FirestoreModel {
     /**
      * Creates a firestore database model
-     * @param {string} name The name of your model
+     * @param {object} fields The definition of your fields
      */
     constructor(fields, config) {
         this._fields = {}
-        this.name = this.constructor.name
+        this.__name__ = this.constructor.name
 
         Object.keys(fields).forEach(key => {
             const field = fields[key]
@@ -253,11 +253,11 @@ class FirestoreModel {
             key = this.key
         }
         return this.db
-            .collection(this.name)
+            .collection(this.__name__)
             .doc(key)
             .get()
             .then(doc => {
-                if (doc.exists()) {
+                if (doc.exists) {
                     return this.merge_remote_data(doc.data())
                 }
                 Promise.reject("This record does not exist in the database")
@@ -275,7 +275,7 @@ class FirestoreModel {
      * @return {Promise.[<Model>]}  Resolves to a list of model items
      */
     query(conditions) {
-        const ref = this.db.collection(this.name)
+        const ref = this.db.collection(this.__name__)
         validateQuery(conditions)
         let limit_set = false
         conditions.forEach(condition => {
@@ -326,7 +326,7 @@ class FirestoreModel {
         })
         if (this.key) {
             return this.db
-                .collection(this.name)
+                .collection(this.__name__)
                 .doc(this.key)
                 .set(put_fields, { merge: true })
                 .then(doc_ref => {
@@ -334,7 +334,7 @@ class FirestoreModel {
                 })
         } else {
             return this.db
-                .collection(this.name)
+                .collection(this.__name__)
                 .add(put_fields)
                 .then(doc_ref => {
                     return this.merge_remote_data(doc_ref.data())
@@ -346,6 +346,7 @@ class FirestoreModel {
 class FieldType {
     constructor(field_type, field_props) {
         this.type = field_type
+        field_props = field_props | {}
         if (field_props.default !== undefined)
             this.default = field_props.default
     }
@@ -501,7 +502,8 @@ export const db = {
      */
     get: (key, Model) => {
         const model = new Model()
-        return model.get_remote(key)
+        console.log(model.__name__)
+        return model.get(key)
     },
 
     /**
@@ -558,12 +560,13 @@ export const db = {
 
     /**
      * A list field of strings or numbers
+     * @param  {FieldType} field The field type for the contents of the list
      * @param  {object} field_props An object with number Properties
-     * @param   {object} field_props.default The default value of the list
+     * @param  {object} field_props.default The default value of the list
      * @return {FieldType} A field type accessible to the firestore model
      */
-    listField: field_props => {
-        return new FieldType(FieldTypes.list, field_props)
+    listField: (field, field_props) => {
+        return new FieldType(FieldTypes.list, { field, field_props })
     },
 
     /**
