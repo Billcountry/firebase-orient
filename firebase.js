@@ -126,7 +126,7 @@ export default class Firebase {
         return this.auth
             .signInWithEmailAndPassword(email, password)
             .then(result => {
-                return this.handle_response(result)
+                return this.handle_auth_response(result)
             })
     }
 
@@ -138,10 +138,10 @@ export default class Firebase {
      * @returns {Promise}
      */
     auth_email_register(email, password) {
-        this.auth_alt
+        return this.auth
             .createUserWithEmailAndPassword(email, password)
             .then(result => {
-                return this.handle_response(result)
+                return this.handle_auth_response(result)
             })
     }
 
@@ -339,7 +339,7 @@ class FirestoreModel {
                 .collection(this.__name__)
                 .add(put_fields)
                 .then(doc_ref => {
-                    return this.merge_remote_data(doc_ref.data)
+                    return this
                 })
         }
     }
