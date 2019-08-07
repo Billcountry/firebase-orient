@@ -206,11 +206,17 @@ export const CURRENT_TIMESTAMP = firebase.database.ServerValue.TIMESTAMP
 class FirestoreModel {
     /**
      * Creates a firestore database model
+     * @param {object} name The name of the model on Firestore, you need to specify this since classnames can be rewritten by webpack
      * @param {object} fields The definition of your fields
      */
-    constructor(fields, config) {
+    constructor(name, fields, config) {
+        if (!name || typeof(name) !== typeof("string")) {
+            throw new Error("Model name must be provided, this prevents re-writes by webpack and uglify")
+        }
+
+        this.__name__ = name
+
         this._fields = {}
-        this.__name__ = this.constructor.name
 
         Object.keys(fields).forEach(key => {
             const field = fields[key]
