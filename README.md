@@ -1,5 +1,6 @@
 # [Firebase Orient](https://github.com/Billcountry/firebase-orient#readme) *1.0.0*
 
+[Issues](https://github.com/Billcountry/firebase-orient/issues)
 Firebase Orient is an object oriented implementation of Google's firebase and firestore database.
 Bias admission, the firestore models are made to simulate the behaviour of datastore models in python as much as possible.
 
@@ -167,3 +168,5 @@ session.start = db.currentTimestamp()
 - v1.0.2
     - Fixed error on getting models
     - Fixed errors on saving updated models
+- v1.0.3
+    - Enforced model name provision to prevent webpack overwrite

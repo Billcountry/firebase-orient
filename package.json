@@ -1,6 +1,6 @@
 {
   "name": "firebase-orient",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "An object oriented firebase and firestore implementation",
   "main": "firebase.js",
   "scripts": {
